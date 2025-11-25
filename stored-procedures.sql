@@ -436,6 +436,11 @@ AS
 BEGIN
     SET NOCOUNT ON;
     
+    -- Build search pattern safely (parameters are already escaped by SQL Server)
+    DECLARE @SearchPattern NVARCHAR(202);
+    IF @SearchTerm IS NOT NULL
+        SET @SearchPattern = '%' + @SearchTerm + '%';
+    
     SELECT 
         e.ExpenseId,
         e.UserId,
@@ -462,7 +467,7 @@ BEGIN
     INNER JOIN dbo.ExpenseStatus s ON e.StatusId = s.StatusId
     LEFT JOIN dbo.Users reviewer ON e.ReviewedBy = reviewer.UserId
     WHERE 
-        (@SearchTerm IS NULL OR e.Description LIKE '%' + @SearchTerm + '%' OR u.UserName LIKE '%' + @SearchTerm + '%')
+        (@SearchTerm IS NULL OR e.Description LIKE @SearchPattern OR u.UserName LIKE @SearchPattern)
         AND (@CategoryId IS NULL OR e.CategoryId = @CategoryId)
         AND (@StatusId IS NULL OR e.StatusId = @StatusId)
         AND (@StartDate IS NULL OR e.ExpenseDate >= @StartDate)
