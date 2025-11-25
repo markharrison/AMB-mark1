@@ -1,0 +1,89 @@
+﻿@page
+@model ExpenseManagement.Pages.IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="error-bar">
+        <div class="error-title">⚠️ Database Connection Issue</div>
+        <div>@Model.ErrorMessage</div>
+        <div class="mt-2 small">Displaying sample data. Please check your database connection.</div>
+    </div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Expense Dashboard</h2>
+    <a asp-page="/NewExpense" class="btn btn-primary">
+        + New Expense
+    </a>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="stat-label">Total Expenses</div>
+            <div class="stat-value">@Model.Summary.TotalExpenses</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card" style="border-left-color: #f59e0b;">
+            <div class="stat-label">Pending Approvals</div>
+            <div class="stat-value">@Model.Summary.PendingApprovals</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card" style="border-left-color: #22c55e;">
+            <div class="stat-label">Approved Amount</div>
+            <div class="stat-value">£@Model.Summary.ApprovedAmountGBP.ToString("N2")</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card" style="border-left-color: #3b82f6;">
+            <div class="stat-label">Approved Count</div>
+            <div class="stat-value">@Model.Summary.ApprovedCount</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">Recent Expenses</h5>
+            <a asp-page="/Expenses" class="btn btn-sm btn-outline-secondary">View All</a>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Employee</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var expense in Model.RecentExpenses)
+                    {
+                        <tr>
+                            <td>@expense.ExpenseDate.ToString("dd MMM yyyy")</td>
+                            <td>@expense.UserName</td>
+                            <td>@expense.CategoryName</td>
+                            <td>£@expense.AmountGBP.ToString("N2")</td>
+                            <td>
+                                <span class="badge-status badge-@expense.StatusName.ToLower()">
+                                    @expense.StatusName.ToUpper()
+                                </span>
+                            </td>
+                            <td>@expense.Description</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
