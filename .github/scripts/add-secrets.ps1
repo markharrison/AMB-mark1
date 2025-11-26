@@ -18,11 +18,12 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "✓ Authenticated with GitHub" -ForegroundColor Green
 Write-Host ""
 
-# Configuration
-$GITHUB_REPO = (gh repo view --json nameWithOwner --jq .nameWithOwner)
+# Configuration - Get repo from git remote
+$gitRemote = git remote get-url origin
+$GITHUB_REPO = $gitRemote -replace '^https://github.com/', '' -replace '\.git$', ''
 
 # Paste your values here:
-$ClientId = "cf74a504-d6e3-4070-9f14-eb846fd846c4"
+$ClientId = "2c55118c-c315-4074-a250-cfe8b3129123"
 $TenantId = "95fdb808-f6f3-4abc-9cb2-8a86090ea39a"
 $SubscriptionId = "bf0ff2fe-5503-48b0-8b52-cd0e67aa8fd8"
 

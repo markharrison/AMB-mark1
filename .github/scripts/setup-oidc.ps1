@@ -16,7 +16,8 @@ Write-Host "==========================================" -ForegroundColor Cyan
 
 # Configuration
 $APP_NAME = "gh-expensemgmt-deployer"
-$GITHUB_REPO = "markharrison/AMB-mark1"
+$gitRemote = git remote get-url origin
+$GITHUB_REPO = $gitRemote -replace '^https://github.com/', '' -replace '\.git$', ''
 
 # Get current subscription
 Write-Host ""
@@ -45,21 +46,30 @@ if ($LASTEXITCODE -ne 0) { Write-Host "Service Principal may already exist" -For
 $OBJECT_ID = az ad sp list --display-name $APP_NAME --query [0].id -o tsv
 Write-Host "✓ Service Principal Object ID: $OBJECT_ID" -ForegroundColor Green
 
-# Add federated credential for all branches
+# Add federated credential for main branch
 Write-Host ""
-Write-Host "Step 4: Adding federated credential for all branches..." -ForegroundColor Yellow
+Write-Host "Step 4: Adding federated credential for main branch..." -ForegroundColor Yellow
 
-$federatedCredParams = @{
-    name = "gh-expensemgmt-all-branches"
+# Create JSON file with proper formatting
+$subject = "repo:$GITHUB_REPO`:ref:refs/heads/main"
+@{
+    name = "gh-expensemgmt-main"
     issuer = "https://token.actions.githubusercontent.com"
-    subject = "repo:${GITHUB_REPO}:ref:refs/heads/*"
+    subject = $subject
     audiences = @("api://AzureADTokenExchange")
-} | ConvertTo-Json -Compress
+} | ConvertTo-Json | Out-File -FilePath "fedcred.json" -Encoding utf8
 
-az ad app federated-credential create --id $APP_ID --parameters $federatedCredParams --output none 2>$null
-if ($LASTEXITCODE -ne 0) { Write-Host "Federated credential may already exist" -ForegroundColor Gray }
+# Delete existing credentials if they exist
+az ad app federated-credential delete --id $APP_ID --federated-credential-id gh-expensemgmt-all-branches 2>$null
+az ad app federated-credential delete --id $APP_ID --federated-credential-id gh-expensemgmt-main 2>$null
 
-Write-Host "✓ Federated credential created for repo: $GITHUB_REPO" -ForegroundColor Green
+# Create new credential
+az ad app federated-credential create --id $APP_ID --parameters fedcred.json
+
+# Cleanup
+Remove-Item -Path "fedcred.json" -Force
+
+Write-Host "✓ Federated credential created for repo: $GITHUB_REPO (main branch)" -ForegroundColor Green
 
 # Assign Contributor role
 Write-Host ""
