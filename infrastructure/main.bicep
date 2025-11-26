@@ -70,6 +70,7 @@ output appServiceUrl string = appService.outputs.appServiceUrl
 output sqlServerName string = azureSql.outputs.sqlServerName
 output sqlServerFqdn string = azureSql.outputs.sqlServerFqdn
 output databaseName string = azureSql.outputs.databaseName
+output sqlServerIdentityPrincipalId string = azureSql.outputs.sqlServerIdentityPrincipalId
 output managedIdentityName string = managedIdentity.outputs.managedIdentityName
 output managedIdentityClientId string = managedIdentity.outputs.managedIdentityClientId
 output managedIdentityPrincipalId string = managedIdentity.outputs.managedIdentityPrincipalId

@@ -22,6 +22,9 @@ param managedIdentityPrincipalId string
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   name: 'sql-${baseName}'
   location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     administrators: {
       administratorType: 'ActiveDirectory'
@@ -65,3 +68,4 @@ resource allowAzureServices 'Microsoft.Sql/servers/firewallRules@2023-05-01-prev
 output sqlServerName string = sqlServer.name
 output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
 output databaseName string = database.name
+output sqlServerIdentityPrincipalId string = sqlServer.identity.principalId

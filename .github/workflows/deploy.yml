@@ -53,3 +53,7 @@ jobs:
           sed -i 's/ADMIN_OBJECT_ID=\$(az ad signed-in-user show --query id -o tsv)/ADMIN_OBJECT_ID="${ADMIN_OBJECT_ID}"/' deploy.sh
           sed -i 's/ADMIN_LOGIN=\$(az ad signed-in-user show --query userPrincipalName -o tsv)/ADMIN_LOGIN="${ADMIN_LOGIN}"/' deploy.sh
           ./deploy.sh
+
+      - name: Post Azure Login (OIDC)
+        if: always()
+        run: az logout

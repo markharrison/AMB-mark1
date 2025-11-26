@@ -52,6 +52,7 @@ APP_SERVICE_URL=$(echo $DEPLOYMENT_OUTPUT | jq -r '.appServiceUrl.value')
 SQL_SERVER_NAME=$(echo $DEPLOYMENT_OUTPUT | jq -r '.sqlServerName.value')
 SQL_SERVER_FQDN=$(echo $DEPLOYMENT_OUTPUT | jq -r '.sqlServerFqdn.value')
 DATABASE_NAME=$(echo $DEPLOYMENT_OUTPUT | jq -r '.databaseName.value')
+SQL_SERVER_IDENTITY_PRINCIPAL_ID=$(echo $DEPLOYMENT_OUTPUT | jq -r '.sqlServerIdentityPrincipalId.value')
 MANAGED_IDENTITY_NAME=$(echo $DEPLOYMENT_OUTPUT | jq -r '.managedIdentityName.value')
 MANAGED_IDENTITY_CLIENT_ID=$(echo $DEPLOYMENT_OUTPUT | jq -r '.managedIdentityClientId.value')
 
@@ -60,6 +61,24 @@ echo "  App Service: $APP_SERVICE_NAME"
 echo "  SQL Server: $SQL_SERVER_FQDN"
 echo "  Database: $DATABASE_NAME"
 echo "  Managed Identity: $MANAGED_IDENTITY_NAME"
+
+# Grant Directory Reader role to SQL Server identity
+echo ""
+echo "Step 2b: Granting Directory Reader role to SQL Server identity..."
+DIRECTORY_READER_ROLE_ID=$(az rest --method GET --uri "https://graph.microsoft.com/v1.0/directoryRoles?\$filter=roleTemplateId eq '88d8e3e3-8f55-4a1e-953a-9b9898b8876b'" --headers "Content-Type=application/json" --query "value[0].id" -o tsv 2>/dev/null || true)
+
+if [ -z "$DIRECTORY_READER_ROLE_ID" ]; then
+    echo "  Activating Directory Reader role..."
+    DIRECTORY_READER_ROLE_ID=$(az rest --method POST --uri "https://graph.microsoft.com/v1.0/directoryRoles" --headers "Content-Type=application/json" --body "{\"roleTemplateId\": \"88d8e3e3-8f55-4a1e-953a-9b9898b8876b\"}" --query "id" -o tsv)
+fi
+
+echo "  Assigning Directory Reader role to SQL Server identity..."
+az rest --method POST \
+    --uri "https://graph.microsoft.com/v1.0/directoryRoles/${DIRECTORY_READER_ROLE_ID}/members/\$ref" \
+    --headers "Content-Type=application/json" \
+    --body "{\"@odata.id\": \"https://graph.microsoft.com/v1.0/directoryObjects/${SQL_SERVER_IDENTITY_PRINCIPAL_ID}\"}" 2>/dev/null || echo "  Role may already be assigned"
+
+echo "✓ Directory Reader role granted to SQL Server identity"
 
 # Configure App Service settings
 echo ""
