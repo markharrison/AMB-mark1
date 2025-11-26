@@ -35,8 +35,19 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
 
+      - name: Get service principal details
+        id: sp-details
+        run: |
+          SP_OBJECT_ID=$(az ad sp show --id ${{ secrets.AZURE_CLIENT_ID }} --query id -o tsv)
+          SP_NAME=$(az ad sp show --id ${{ secrets.AZURE_CLIENT_ID }} --query displayName -o tsv)
+          echo "sp-object-id=$SP_OBJECT_ID" >> $GITHUB_OUTPUT
+          echo "sp-name=$SP_NAME" >> $GITHUB_OUTPUT
+
       - name: Make deploy script executable
         run: chmod +x deploy.sh
 
       - name: Run deployment script
+        env:
+          ADMIN_OBJECT_ID: ${{ steps.sp-details.outputs.sp-object-id }}
+          ADMIN_LOGIN: ${{ steps.sp-details.outputs.sp-name }}
         run: ./deploy.sh
